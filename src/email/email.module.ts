@@ -4,29 +4,40 @@ import { MailerModule } from "@nestjs-modules/mailer";
 import { EmailController } from "./email.controller";
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { join } from "path";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
 
 @Module({
-    imports: [MailerModule.forRoot({
-        transport: {
-            host: 'smtp.zoho.in',
-            port: 587,
-            secure: false,
-            auth: {
-                user: "no.reply@nilachains.com",
-                pass: 'UC1fx2ULrUR8'
-            }
-        },
-        defaults: {
-            from: '"No Reply" <no.reply@nilachains.com>',
-        },
-        template: {
-            dir:join(__dirname,'temp'),
-            adapter: new HandlebarsAdapter(),
-            options: { strict: true },
-        }
-    })],
+    imports: [
+        MailerModule.forRootAsync({
+            imports: [ConfigModule],
+            inject: [ConfigService],
+            useFactory: (configService: ConfigService) => ({
+                transport: {
+                    host: configService.get<string>('formail.host'),
+                    port: configService.get<number>('formail.port'),
+                    secure: false,
+                    auth: {
+                        user: configService.get<string>('formail.user'),
+                        pass: configService.get<string>('formail.pass')
+                    }
+                },
+                defaults: {
+                    from: `No Reply <${configService.get('formail.user')}>`
+                },
+                template: {
+                    dir: join(process.cwd(), 'src', 'email', 'temp'),
+                    adapter: new HandlebarsAdapter(),
+                    options: { strict: true }
+                }
+            })
+        })
+    ],
     controllers: [EmailController],
-    providers: [EmailService]
+    providers: [EmailService],
+    exports: [EmailService]
 })
-export class EmailModule { }
+export class EmailModule {
+
+}
+
