@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
+import { Controller, FileTypeValidator, Get, Param, ParseFilePipe, Post, UploadedFile, UseInterceptors } from "@nestjs/common";
 import { EmailService } from "./email.service";
 import { FileInterceptor } from "@nestjs/platform-express";
 
@@ -9,13 +9,18 @@ export class EmailController {
 
     @Get("/:toemail")
     regiterEmail(@Param('toemail') toemail: string) {
-        this.emailService.attachedHtmlAsPdf( toemail)
+        this.emailService.attachedHtmlAsPdf(toemail, null)
     }
 
     @Post()
     @UseInterceptors(FileInterceptor('newfile'))
-    sendMailUsingExcel(@UploadedFile() file:Express.Multer.File){
-        // console.log(file)
+    sendMailUsingExcel(@UploadedFile(
+        new ParseFilePipe({
+            validators:[
+                new FileTypeValidator({fileType:'sheet'})
+            ]
+        })
+    ) file: Express.Multer.File) {
         this.emailService.getEmailFromExcel(file)
     }
 
