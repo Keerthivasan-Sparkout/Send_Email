@@ -103,7 +103,7 @@ export class EmailService {
     async getEmailFromExcel(file: Express.Multer.File) {
         if (file) {
             const workbook = await Excel.read(file.buffer, { type: 'buffer' });
-            const sheetName = workbook.SheetNames[1];
+            const sheetName = workbook.SheetNames[0];
             const workSheet = workbook.Sheets[sheetName];
             const rows = Excel.utils.sheet_to_json(workSheet, { raw: false });
             if(rows.length===0){
